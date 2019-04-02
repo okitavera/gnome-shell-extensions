@@ -1,33 +1,35 @@
 const St = imports.gi.St;
 const Main = imports.ui.main;
-const userData = imports.gi.AccountsService.UserManager.get_default().get_user(
+const Userdata = imports.gi.AccountsService.UserManager.get_default().get_user(
   imports.gi.GLib.get_user_name()
 );
 
-let icon, icChanged, icLoaded, wrapper;
+let im, im_changed, im_loaded, avatar;
 
 function update() {
-  if (userData.get_icon_file() != null) {
-    icon.style = `background-image: url("${userData.get_icon_file()}");`;
-    icon.width = icon.height = Main.panel.actor.get_height() - 8;
+  if (Userdata.get_icon_file() != null) {
+    im.style = `background-image: url("${Userdata.get_icon_file()}");`;
   }
 }
 
+function init() {
+  let im_canva = new St.Bin({ style_class: "avatar-indicator--wrapper" });
+  avatar = new St.BoxLayout({ style_class: "panel-status-indicators-box" });
+  im = new St.Bin({ style_class: "avatar-indicator" });
+  im_canva.add_actor(im);
+  avatar.add_actor(im_canva);
+  im.width = im.height = Main.panel.actor.get_height() - 8;
+}
+
 function enable() {
-  icon = new St.Bin({ style_class: "avatar-indicator" });
-  icLoaded = userData.connect("notify::is-loaded", update);
-  icChanged = userData.connect("changed", update);
-  wrapper = new St.Bin({ style_class: "avatar-indicator--wrapper" });
-  wrapper.add_actor(icon);
-  Main.panel.statusArea.aggregateMenu._power.indicators.add_child(wrapper);
-  update();
+  Main.panel.statusArea.aggregateMenu._indicators.add_child(avatar);
+  im_loaded = Userdata.connect("notify::is-loaded", update);
+  im_changed = Userdata.connect("changed", update);
 }
 
 function disable() {
-  Main.panel.statusArea.aggregateMenu._power.indicators.remove_child(wrapper);
-  userData.disconnect(icChanged);
-  userData.disconnect(icLoaded);
-  icon = icChanged = icLoaded = wrapper = null;
+  Main.panel.statusArea.aggregateMenu._indicators.remove_child(avatar);
+  Userdata.disconnect(im_changed);
+  Userdata.disconnect(im_loaded);
+  avatar = null;
 }
-
-function init() {}
