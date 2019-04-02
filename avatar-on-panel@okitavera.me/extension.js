@@ -27,7 +27,7 @@ function disable() {
   Main.panel.statusArea.aggregateMenu._power.indicators.remove_child(wrapper);
   userData.disconnect(icChanged);
   userData.disconnect(icLoaded);
-  wrapper = icon = null;
+  icon = icChanged = icLoaded = wrapper = null;
 }
 
 function init() {}
