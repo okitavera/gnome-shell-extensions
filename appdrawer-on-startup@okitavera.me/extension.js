@@ -5,13 +5,13 @@
 const Main = imports.ui.main;
 let lmHook;
 
-function onStartupPrepared() {
+function onStartupCompleted() {
   Main.overview.viewSelector._showAppsButton.checked = true;
   return Main.overview.show();
 }
 
 function enable() {
-  lmHook = Main.layoutManager.connect("startup-prepared", onStartupPrepared);
+  lmHook = Main.layoutManager.connect("startup-complete", onStartupCompleted);
 }
 
 function disable() {
