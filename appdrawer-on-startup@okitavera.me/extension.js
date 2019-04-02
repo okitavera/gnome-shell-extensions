@@ -3,15 +3,19 @@
  * |-> https://extensions.gnome.org/extension/658/overview-on-startup/
  */
 const Main = imports.ui.main;
+let lmHook;
 
-function openAppView() {
+function onStartupPrepared() {
   Main.overview.viewSelector._showAppsButton.checked = true;
   return Main.overview.show();
 }
 
 function enable() {
-  Main.layoutManager.connect("startup-prepared", openAppView.bind(this));
+  lmHook = Main.layoutManager.connect("startup-prepared", onStartupPrepared);
 }
 
-function disable() {}
+function disable() {
+  Main.layoutManager.disconnect(lmHook);
+  lmHook = null;
+}
 function init() {}
