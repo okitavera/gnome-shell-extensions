@@ -22,14 +22,16 @@ function init() {
 }
 
 function enable() {
+  if (avatar == undefined) init(), update();
   Main.panel.statusArea.aggregateMenu._indicators.add_child(avatar);
   im_loaded = Userdata.connect("notify::is-loaded", update);
   im_changed = Userdata.connect("changed", update);
 }
 
 function disable() {
+  if (avatar == undefined) return;
   Main.panel.statusArea.aggregateMenu._indicators.remove_child(avatar);
   Userdata.disconnect(im_changed);
   Userdata.disconnect(im_loaded);
-  avatar = null;
+  avatar = undefined;
 }
