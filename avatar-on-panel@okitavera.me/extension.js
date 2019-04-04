@@ -1,37 +1,52 @@
+const Lang = imports.lang;
 const St = imports.gi.St;
 const Main = imports.ui.main;
-const Userdata = imports.gi.AccountsService.UserManager.get_default().get_user(
-  imports.gi.GLib.get_user_name()
-);
+const GLib = imports.gi.GLib;
+const UserManager = imports.gi.AccountsService.UserManager;
 
-let im, im_changed, im_loaded, avatar;
+class AvatarDrawer {
+  constructor() {
+    this._user = UserManager.get_default().get_user(GLib.get_user_name());
 
-function update() {
-  if (Userdata.get_icon_file() != null) {
-    im.style = `background-image: url("${Userdata.get_icon_file()}");`;
+    this._image = new St.Bin({ style_class: "avatar-img" });
+    this._imageCanvas = new St.Bin({ style_class: "avatar-wrapper" });
+    this.actor = new St.BoxLayout({
+      style_class: "panel-status-indicators-box"
+    });
+
+    this._imageCanvas.add_actor(this._image);
+    this.actor.add_actor(this._imageCanvas);
+  }
+  _update() {
+    if (this._user.get_icon_file() == null) return;
+    this._image.style = `background-image: url("${this._user.get_icon_file()}");`;
+    this._image.width = Main.panel.actor.get_height() - 8;
+    this._image.height = this._image.width;
+  }
+  connect() {
+    this._loaded = this._user.connect(
+      "notify::is-loaded",
+      this._update.bind(this)
+    );
+    this._changed = this._user.connect("changed", this._update.bind(this));
+    this._update();
+    Main.panel.statusArea.aggregateMenu._indicators.add_child(this.actor);
+  }
+  disconnect() {
+    this._user.disconnect(this._loaded);
+    this._user.disconnect(this._changed);
+    Main.panel.statusArea.aggregateMenu._indicators.remove_child(this.actor);
   }
 }
 
-function init() {
-  let im_canva = new St.Bin({ style_class: "avatar-indicator--wrapper" });
-  avatar = new St.BoxLayout({ style_class: "panel-status-indicators-box" });
-  im = new St.Bin({ style_class: "avatar-indicator" });
-  im_canva.add_actor(im);
-  avatar.add_actor(im_canva);
-  im.width = im.height = Main.panel.actor.get_height() - 8;
-}
-
+let avatar;
+function init() {}
 function enable() {
-  if (avatar == undefined) init(), update();
-  Main.panel.statusArea.aggregateMenu._indicators.add_child(avatar);
-  im_loaded = Userdata.connect("notify::is-loaded", update);
-  im_changed = Userdata.connect("changed", update);
+  if (avatar == undefined) avatar = new AvatarDrawer();
+  avatar.connect();
 }
-
 function disable() {
   if (avatar == undefined) return;
-  Main.panel.statusArea.aggregateMenu._indicators.remove_child(avatar);
-  Userdata.disconnect(im_changed);
-  Userdata.disconnect(im_loaded);
+  avatar.disconnect();
   avatar = undefined;
 }
